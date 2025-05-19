@@ -1,0 +1,109 @@
+services:
+  notebook:
+      platform: linux/amd64
+      build: 
+        context: .
+        dockerfile: docker/notebook/Dockerfile
+      image: vi-notebook:latest
+      container_name: vi-notebook
+      # command: jupyter lab
+      volumes:
+       - ./notebook/:/notebook/
+      environment:
+        - SPARK_COMPAT_VERSION=${SPARK_COMPAT_VERSION}
+        - SCALA_COMPAT_VERSION=${SCALA_COMPAT_VERSION}
+        - CATBOOST_SPARK_VERSION=${CATBOOST_SPARK_VERSION}
+        - CLICKHOUSE_HOST=${CLICKHOUSE_HOST}
+        - CLICKHOUSE_PORT=${CLICKHOUSE_PORT}
+        - CLICKHOUSE_USER=${CLICKHOUSE_USER}
+        - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+        - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+        - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      ports:
+        - 8888:8888
+      # networks:
+      #   - cp-network
+
+  # s3:
+  #   platform: linux/amd64
+  #   image: minio/minio:latest
+  #   container_name: cp-minio
+  #   ports:
+  #     - "9000:9000"
+  #     - "9099:9099"
+  #   environment:
+  #     - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+  #     - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+  #   volumes:
+  #     - ./minio:/data
+  #   command: server --address ":9099" --console-address ":9000" /data
+  #   restart: always # necessary since it's failing to start sometimes
+  #   healthcheck:
+  #     test: curl -I http://localhost:9000/minio/health/live || exit 1
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 3  
+  #   networks:
+  #   - cp-network
+
+  # db:
+  #   image: clickhouse:latest
+  #   platform: linux/amd64
+  #   container_name: cp-clickhouse 
+  #   ulimits:
+  #     nofile:
+  #       soft: 262144
+  #       hard: 262144
+  #   ports:
+  #     - 8123:8123
+  #   environment:
+  #     - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+  #   volumes:
+  #     - ./clickhouse/data:/var/lib/clickhouse/
+  #     - ./clickhouse/logs:/var/log/clickhouse-server/
+  #     - ./clickhouse/config/:/etc/clickhouse-server/config/
+  #     - ./clickhouse/users/:/etc/clickhouse-server/users.d/
+  #     - ./clickhouse/csv:/var/lib/csv/
+  #   cap_add:
+  #     - SYS_NICE
+  #     - NET_ADMIN
+  #     - IPC_LOCK
+  #     - SYS_PTRACE
+  #   healthcheck:
+  #     test: wget --no-verbose --tries=1 http://127.0.0.1:8123/ping || exit 1
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     - cp-network
+
+#   db:
+#     platform: linux/amd64
+#     image: postgres:13
+#     container_name: cp-postgres
+#     ports:
+#       - 5432:5432
+#     environment:
+#       - POSTGRES_DB=${DB_NAME}
+#       - POSTGRES_USER=${DB_USER}
+#       - POSTGRES_PASSWORD=${DB_PASSWORD}
+#       - POSTGRES_HOST=${DB_HOST}
+#       - POSTGRES_PORT=${DB_PORT}
+#     volumes:
+#       - ./postgres/pg-data:/var/lib/postgresql/data
+#     cap_add:
+#       - SYS_NICE
+#       - NET_ADMIN
+#       - IPC_LOCK
+#       - SYS_PTRACE
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     networks:
+#       - cp-network
+
+# networks:
+#   cp-network:
+#     name: cp-network

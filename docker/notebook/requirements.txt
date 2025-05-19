@@ -1,0 +1,8 @@
+dotenv==0.9.9
+optuna==4.3.0
+clickhouse-connect==0.8.17
+clickhouse-driver==0.2.9
+catboost==1.2.7
+psycopg2==2.9.10
+jupyterlab==4.3.6
+pyspark==3.5.5
