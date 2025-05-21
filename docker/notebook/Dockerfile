@@ -1,27 +1,14 @@
 # FROM debian:10
-FROM python:3.11-slim
+FROM jupyter/pyspark-notebook:latest
 
 WORKDIR /notebook
 
 COPY ./docker/notebook/requirements.txt /tmp/requirements.txt
-COPY ./.env /.env
+COPY .env /.env
 
-# RUN apk add --no-cache git
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+# RUN sudo -S 'r13l02c1988' apt-get update && apt-get install -y \
+#     build-essential \
+#     curl \
+#     libpq-dev 
 
-# ENV PYTHONUNBUFFERED=1
-# RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
-# RUN python3 -m ensurepip
-# RUN pip3 install --no-cache --upgrade pip setuptools
-
-# RUN apt update && apt install -y \
-#      build-essential \
-#      curl \
-#      libpq-dev \
-#      python3 \
-#      python3-pip \
-#      && rm -rf /var/lib/apt/lists/* 
-
-# RUN pip3 install -r /tmp/requirements.txt
-
-# CMD ["jupyter", "lab"]
+RUN pip3 install -r /tmp/requirements.txt
