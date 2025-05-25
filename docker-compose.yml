@@ -24,7 +24,7 @@ services:
           condition: service_healthy
           restart: true
       networks:
-        - cp-network
+        - pyspark-network
   db:
     image: clickhouse:latest
     platform: linux/amd64
@@ -54,8 +54,8 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - cp-network
+      - pyspark-network
 
 networks:
-  cp-network:
-    name: cp-network
+  pyspark-network:
+    name: pyspark-network
