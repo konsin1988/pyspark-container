@@ -5,7 +5,7 @@ services:
         context: .
         dockerfile: docker/notebook/Dockerfile
       image: spark-notebook:latest
-      container_name: spark-notebook
+      container_name: pyspark-notebook
       command: start-notebook.sh --NotebookApp.token=''
       volumes:
        - ./notebook/:/notebook/
