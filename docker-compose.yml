@@ -6,7 +6,10 @@ services:
         dockerfile: docker/notebook/Dockerfile
       image: spark-notebook:latest
       container_name: pyspark-notebook
-      command: start-notebook.sh --NotebookApp.token=''
+      command: > 
+        bash -c "jupyter trust /notebook/credit_prediction_spark.ipynb && 
+        start-notebook.sh --NotebookApp.token=''" 
+        
       volumes:
        - ./notebook/:/notebook/
       environment:
