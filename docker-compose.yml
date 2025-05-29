@@ -5,7 +5,7 @@ services:
         context: .
         dockerfile: docker/notebook/Dockerfile
       image: spark-notebook:latest
-      container_name: pyspark-notebook
+      container_name: pn-notebook
       command: > 
         bash -c "jupyter trust /notebook/credit_prediction_spark.ipynb && 
         start-notebook.sh --NotebookApp.token=''" 
@@ -26,12 +26,72 @@ services:
         db:
           condition: service_healthy
           restart: true
+        mlflow:
+          condition: service_healthy
+          restart: true
       networks:
-        - pyspark-network
+        - pn-network
+
+  mlflow:
+    platform: linux/amd64
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/mlflow/Dockerfile
+    image: pn-mlflow:latest
+    container_name: pn-mlflow
+    depends_on:
+      s3:
+        condition: service_healthy
+        restart: true
+      mlflow_backend_store:
+        condition: service_healthy
+        restart: true
+    ports:
+        - 5000:5000
+    volumes:
+        - ./mlflow:/mlflow
+    environment:
+        - MLFLOW_S3_ENDPOINT_URL=http://s3:9099/
+        - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+        - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+        - MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+        - MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
+    command: mlflow server --backend-store-uri postgresql://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${MLFLOW_DB_NAME} --default-artifact-root s3://mlflow --serve-artifacts --host 0.0.0.0
+    healthcheck:  
+            test: ["CMD", "curl", "-f", "http://localhost:5000/"]  
+            interval: 30s  
+            timeout: 10s  
+            retries: 3 
+    networks:
+        - pn-network
+
+  s3:
+    platform: linux/amd64
+    image: minio/minio:latest
+    container_name: pn-minio
+    ports:
+      - "9000:9000"
+      - "9099:9099"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./minio:/data
+    command: server --address ":9099" --console-address ":9000" /data
+    restart: always # necessary since it's failing to start sometimes
+    healthcheck:
+      test: curl -I http://localhost:9000/minio/health/live || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+    - pn-network
+
   db:
     image: clickhouse:latest
     platform: linux/amd64
-    container_name: pyspark-clickhouse 
+    container_name: pn-clickhouse 
     ulimits:
       nofile:
         soft: 262144
@@ -57,8 +117,35 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - pyspark-network
+      - pn-network
+
+  mlflow_backend_store:
+    platform: linux/amd64
+    image: postgres:13
+    container_name: pn-postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=${MLFLOW_DB_NAME}
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_HOST=${PG_HOST}
+      - POSTGRES_PORT=${PG_PORT}
+    volumes:
+      - ./postgres/pg-data:/var/lib/postgresql/data
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - IPC_LOCK
+      - SYS_PTRACE
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pn-network
 
 networks:
-  pyspark-network:
-    name: pyspark-network
+  pn-network:
+    name: pn-network
