@@ -12,6 +12,7 @@ services:
         
       volumes:
        - ./notebook/:/notebook/
+         # - ./spark_entry/:/usr/local/spark/kubernetes/dockerfiles/spark/
       environment:
         - SPARK_COMPAT_VERSION=${SPARK_COMPAT_VERSION}
         - SCALA_COMPAT_VERSION=${SCALA_COMPAT_VERSION}
