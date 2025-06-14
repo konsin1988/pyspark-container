@@ -32,3 +32,5 @@ Logistic regression is a supervised learning algorithm that makes use of logisti
 - maxIter;
 - regParam;
 - aggregationDepth.
+
+![load_spark](./images/load_spark.png)
