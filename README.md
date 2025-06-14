@@ -14,7 +14,6 @@
 This binary classifier optimizes the Hinge Loss using the OWLQN optimizer. Only supports L2 regularization currently.
 ##### Hyperparameters we will use in crossvalidation:
 - maxIter;
-- aggregationDepth;
 - tol;
 - regParam.
 
@@ -23,7 +22,6 @@ It is a technique of producing an additive predictive model by combining various
 
 ##### Hyperparameters we will use in crossvalidation:
 - maxDepth;
-- maxBins;
 - maxIter;
 - validationTol.
 
